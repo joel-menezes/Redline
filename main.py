@@ -99,7 +99,7 @@ def main():
 
 
 @socketio.on("connect")
-def on_connect():
+def on_connect(auth=None):
     is_active = client.get_record_status().output_active
 
     # Update the client with the current recording status and scene name upon connection
@@ -109,7 +109,6 @@ def on_connect():
     socketio.emit("scene_update", {
                     "message": client.get_current_program_scene().scene_name
                 })
-    return render_template("index.html")
 
 @app.route("/record", methods=["POST"])
 def record():
