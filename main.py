@@ -32,6 +32,7 @@ def main():
 def on_connect():
     is_active = client.get_record_status().output_active
 
+    # Update the client with the current recording status upon connection
     socketio.emit("obs_update", {
             "message": "REC..." if is_active else "STOPPED"
         })
@@ -41,8 +42,22 @@ def on_connect():
 @app.route("/record", methods=["POST"])
 def record():
     is_active = client.get_record_status().output_active
+    socketio.emit("obs_update", {
+        "message": "REC..." if not is_active else "STOPPED"
+    })
     if  is_active:
-        client.stop_record()
+        # Uploads the recorded video to Dropbox after stopping the recording
+        response = client.stop_record()
+        video_path = response.output_path
+        dropbox_path = f"/Homily/{os.path.basename(video_path)}"
+
+        with open(video_path, "rb") as f:
+            dbx.files_upload(
+                f.read(),
+                dropbox_path,
+                mode=dropbox.files.WriteMode.overwrite
+            )
+
         return jsonify({"success": True})
     else:
         client.start_record()

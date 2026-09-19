@@ -19,6 +19,11 @@
             border: 8px inset #e60000;
             box-sizing: border-box;
         }
+        
+        #rec:hover{
+            filter: brightness(0.85);
+        }
+
     </style>
 
 </head>
@@ -46,7 +51,7 @@
             }
         })
 
-        
+
         const socket = io();
         
         socket.on("obs_update", function(data){
