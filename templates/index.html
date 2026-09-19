@@ -53,6 +53,7 @@
             box-sizing: border-box;
         }
         
+        
         #toast-container{
             position: fixed;
             bottom: 20px;
@@ -184,12 +185,15 @@
         socket.on("obs_update", function(data){
             document.getElementById("status").textContent = data.message;
             if (data.message == "REC..."){
-                 rec.style.backgroundColor = "#c50000";
-                 rec.style.border =  "8px outset #e60000";
+                rec.style.backgroundColor = "#c50000";
+                rec.style.border =  "8px outset #e60000";
+                change_scene.style.border =  "8px outset #e60000";
             }else{
                rec.style.backgroundColor = "#252424";
                rec.style.border =  "8px inset #334155";
-            } 
+               change_scene.style.border =  "8px outset #334155";
+
+            }
         });
 
         socket.on("scene_update", function(data){
