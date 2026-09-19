@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 import dropbox
 from obsws_python.error import OBSSDKError, OBSSDKRequestError
 from dotenv import load_dotenv
+import threading
 import os
 
 load_dotenv()
@@ -37,46 +38,46 @@ def on_current_program_scene_changed(data):
                     "status": "success"
                 })
 
+def upload_to_dropbox(data):
+    video_path = data.output_path
+    dropbox_path = f"/Homily/{os.path.basename(video_path)}"
+
+    chunk_size = 50 * 1024 * 1024
+    file_size = os.path.getsize(video_path)
+
+    # For Larger files, chunk the upload to avoid loading the whole file into memory
+    with open(video_path, "rb") as f:
+        if file_size <= chunk_size:
+            dbx.files_upload(
+                f.read(),
+                dropbox_path,
+                mode=dropbox.files.WriteMode.overwrite
+            )
+        else:
+            upload_session = dbx.files_upload_session_start(f.read(chunk_size))
+            cursor = dropbox.files.UploadSessionCursor(session_id=upload_session.session_id, offset=f.tell())
+            commit = dropbox.files.CommitInfo(path=dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+
+            while f.tell() < file_size:
+                if (file_size - f.tell()) <= chunk_size:
+                    dbx.files_upload_session_finish(f.read(chunk_size), cursor, commit)
+                    break
+                else:
+                    dbx.files_upload_session_append_v2(f.read(chunk_size), cursor)
+                    cursor.offset = f.tell()
+    socketio.emit("notif", {
+                        "message": f"Success: Video uploaded to Dropbox at {dropbox_path}",
+                        "status": "success"
+                    })
+
 def on_record_state_changed(data):
     is_active = data.output_active
 
     # Uploads the recorded video to Dropbox after stopping the recording
     try:
         if data.output_state == "OBS_WEBSOCKET_OUTPUT_STOPPED":
-            video_path = data.output_path
-            dropbox_path = f"/Homily/{os.path.basename(video_path)}"
-
-            chunk_size = 8 * 1024 * 1024
-            file_size = os.path.getsize(video_path)
-
-            # For Larger files, chunk the upload to avoid loading the whole file into memory
-            with open(video_path, "rb") as f:
-                if file_size <= chunk_size:
-                    dbx.files_upload(
-                                    f.read(),
-                                    dropbox_path,
-                                    mode=dropbox.files.WriteMode.overwrite
-                                )
-                    socketio.emit("notif", {
-                        "message": f"Success: Video uploaded to Dropbox at {dropbox_path}",
-                        "status": "success"
-                    })
-                else:
-                    upload_session = dbx.files_upload_session_start(f.read(chunk_size))
-                    cursor = dropbox.files.UploadSessionCursor(session_id=upload_session.session_id, offset=f.tell())
-                    commit = dropbox.files.CommitInfo(path=dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
-
-                    while f.tell() < file_size:
-                        if (file_size - f.tell()) <= chunk_size:
-                            dbx.files_upload_session_finish(f.read(chunk_size), cursor, commit)
-                            break
-                        else:
-                            dbx.files_upload_session_append_v2(f.read(chunk_size), cursor)
-                            cursor.offset = f.tell()
-                    socketio.emit("notif", {
-                                        "message": f"Success: Video uploaded to Dropbox at {dropbox_path}",
-                                        "status": "success"
-                                    })
+            upload_thread = threading.Thread(target=upload_to_dropbox, args=(data,))
+            upload_thread.start()
     except Exception as e:
         socketio.emit("notif", {
             "message": f"Error: Failed to upload video to Dropbox. {str(e)}",
