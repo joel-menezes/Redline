@@ -25,7 +25,7 @@ socketio = SocketIO(app)
 
 @app.route("/")
 def main():
-    pass
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
