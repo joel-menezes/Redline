@@ -23,6 +23,26 @@ event_handler = obs.EventClient(host=HOST, port=PORT, password=PASSWORD)
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+
+# OBS Event Handlers, These are used to update the client with the current live data
+def on_current_program_scene_changed(data):
+    scene = data.scene_name
+    socketio.emit("scene_update", {
+                    "message": scene
+                })
+
+def on_record_state_changed(data):
+    is_active = data.output_active
+    socketio.emit("obs_update", {
+                "message": "REC..." if is_active else "STOPPED"
+        })
+
+event_handler.callback.register([
+    on_current_program_scene_changed,
+    on_record_state_changed,
+])
+
+
 @app.route("/")
 def main():
     return render_template("index.html")
@@ -32,11 +52,13 @@ def main():
 def on_connect():
     is_active = client.get_record_status().output_active
 
-    # Update the client with the current recording status upon connection
+    # Update the client with the current recording status and scene name upon connection
     socketio.emit("obs_update", {
             "message": "REC..." if is_active else "STOPPED"
         })
-
+    socketio.emit("scene_update", {
+                    "message": client.get_current_program_scene().scene_name
+                })
     return render_template("index.html")
 
 @app.route("/record", methods=["POST"])
