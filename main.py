@@ -3,8 +3,10 @@ from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO
 import dropbox
 from obsws_python.error import OBSSDKError, OBSSDKRequestError
+from dotenv import load_dotenv
 import os
 
+load_dotenv()
 
 HOST = "localhost"
 PORT = 4455
@@ -73,12 +75,30 @@ def record():
         video_path = response.output_path
         dropbox_path = f"/Homily/{os.path.basename(video_path)}"
 
+        chunk_size = 8 * 1024 * 1024
+        file_size = os.path.getsize(video_path)
+
+        # For Larger files, chunk the upload to avoid loading the whole file into memory
         with open(video_path, "rb") as f:
-            dbx.files_upload(
-                f.read(),
-                dropbox_path,
-                mode=dropbox.files.WriteMode.overwrite
-            )
+            if file_size <= chunk_size:
+                dbx.files_upload(
+                                f.read(),
+                                dropbox_path,
+                                mode=dropbox.files.WriteMode.overwrite
+                            )
+            else:
+                upload_session = dbx.files_upload_session_start(f.read(chunk_size))
+                cursor = dropbox.files.UploadSessionCursor(session_id=upload_session.session_id, offset=f.tell())
+                commit = dropbox.files.CommitInfo(path=dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+
+                while f.tell() < file_size:
+                    if (file_size - f.tell()) <= chunk_size:
+                        dbx.files_upload_session_finish(f.read(chunk_size), cursor, commit)
+                        break
+                    else:
+                        dbx.files_upload_session_append_v2(f.read(chunk_size), cursor)
+                        cursor.offset = f.tell()
+
 
         return jsonify({"success": True})
     else:
