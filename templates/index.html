@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redline</title>
     <style>
+        body{
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #F8F9FA;
+        }
+        
         #rec{
             width: 250px;
             height: 250px;
@@ -43,6 +57,17 @@
             const response = await fetch("/record",{
                 method: "POST"
             })
+            const data = await response.json();
+            if (data.success){
+                console.log("Success");
+            }
+        })
+        
+        const change_scene = document.getElementById("scene")
+        change_scene.addEventListener("click", async() => {
+            const response = await fetch("/change_scene",{
+                method: "POST"
+            })
 
             const data = await response.json();
 
@@ -50,7 +75,6 @@
                 console.log("Success");
             }
         })
-
 
         const socket = io();
         
@@ -62,8 +86,11 @@
             }else{
                rec.style.backgroundColor = "#252424";
                rec.style.border =  "8px inset #334155";
-            }
-            
+            } 
+        });
+
+        socket.on("scene_update", function(data){
+            document.getElementById("curr_scene_text").textContent = "Scene Name: "  + data.message;
         });
     </script>
 </html>
