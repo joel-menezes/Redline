@@ -33,6 +33,20 @@
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
+        const rec = document.getElementById("rec")
+        rec.addEventListener("click", async() => {
+            const response = await fetch("/record",{
+                method: "POST"
+            })
+
+            const data = await response.json();
+
+            if (data.success){
+                console.log("Success");
+            }
+        })
+
+        
         const socket = io();
         
         socket.on("obs_update", function(data){

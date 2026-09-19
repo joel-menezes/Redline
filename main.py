@@ -38,5 +38,23 @@ def on_connect():
 
     return render_template("index.html")
 
+@app.route("/record", methods=["POST"])
+def record():
+    is_active = client.get_record_status().output_active
+    if  is_active:
+        client.stop_record()
+        return jsonify({"success": True})
+    else:
+        client.start_record()
+        return jsonify({"success": True})
+
+
+@app.route("/change_scene", methods=["POST"])
+def change_scene():
+    client.set_current_program_scene("Scene 3") # Placeholder
+    return jsonify({"success": True})
+
+
+
 if __name__ == "__main__":
     socketio.run(app, debug=True, host='0.0.0.0')
