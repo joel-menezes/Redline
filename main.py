@@ -28,5 +28,15 @@ def main():
     return render_template("index.html")
 
 
+@socketio.on("connect")
+def on_connect():
+    is_active = client.get_record_status().output_active
+
+    socketio.emit("obs_update", {
+            "message": "REC..." if is_active else "STOPPED"
+        })
+
+    return render_template("index.html")
+
 if __name__ == "__main__":
     socketio.run(app, debug=True, host='0.0.0.0')

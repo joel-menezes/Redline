@@ -5,7 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redline</title>
     <style>
-
+        #rec{
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background-color: #c50000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            border: 8px inset #e60000;
+            box-sizing: border-box;
+        }
     </style>
 
 </head>
@@ -20,6 +33,18 @@
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
-
+        const socket = io();
+        
+        socket.on("obs_update", function(data){
+            document.getElementById("status").textContent = data.message;
+            if (data.message == "REC..."){
+                 rec.style.backgroundColor = "#c50000";
+                 rec.style.border =  "8px outset #e60000";
+            }else{
+               rec.style.backgroundColor = "#252424";
+               rec.style.border =  "8px inset #334155";
+            }
+            
+        });
     </script>
 </html>
