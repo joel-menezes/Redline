@@ -35,6 +35,37 @@ def on_current_program_scene_changed(data):
 
 def on_record_state_changed(data):
     is_active = data.output_active
+
+    # Uploads the recorded video to Dropbox after stopping the recording
+    if data.output_state == "OBS_WEBSOCKET_OUTPUT_STOPPED":
+        video_path = data.output_path
+        dropbox_path = f"/Homily/{os.path.basename(video_path)}"
+
+        chunk_size = 8 * 1024 * 1024
+        file_size = os.path.getsize(video_path)
+
+        # For Larger files, chunk the upload to avoid loading the whole file into memory
+        with open(video_path, "rb") as f:
+            if file_size <= chunk_size:
+                dbx.files_upload(
+                                f.read(),
+                                dropbox_path,
+                                mode=dropbox.files.WriteMode.overwrite
+                            )
+            else:
+                upload_session = dbx.files_upload_session_start(f.read(chunk_size))
+                cursor = dropbox.files.UploadSessionCursor(session_id=upload_session.session_id, offset=f.tell())
+                commit = dropbox.files.CommitInfo(path=dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
+
+                while f.tell() < file_size:
+                    if (file_size - f.tell()) <= chunk_size:
+                        dbx.files_upload_session_finish(f.read(chunk_size), cursor, commit)
+                        break
+                    else:
+                        dbx.files_upload_session_append_v2(f.read(chunk_size), cursor)
+                        cursor.offset = f.tell()
+        
+
     socketio.emit("obs_update", {
                 "message": "REC..." if is_active else "STOPPED"
         })
@@ -70,36 +101,7 @@ def record():
         "message": "REC..." if not is_active else "STOPPED"
     })
     if  is_active:
-        # Uploads the recorded video to Dropbox after stopping the recording
-        response = client.stop_record()
-        video_path = response.output_path
-        dropbox_path = f"/Homily/{os.path.basename(video_path)}"
-
-        chunk_size = 8 * 1024 * 1024
-        file_size = os.path.getsize(video_path)
-
-        # For Larger files, chunk the upload to avoid loading the whole file into memory
-        with open(video_path, "rb") as f:
-            if file_size <= chunk_size:
-                dbx.files_upload(
-                                f.read(),
-                                dropbox_path,
-                                mode=dropbox.files.WriteMode.overwrite
-                            )
-            else:
-                upload_session = dbx.files_upload_session_start(f.read(chunk_size))
-                cursor = dropbox.files.UploadSessionCursor(session_id=upload_session.session_id, offset=f.tell())
-                commit = dropbox.files.CommitInfo(path=dropbox_path, mode=dropbox.files.WriteMode("overwrite"))
-
-                while f.tell() < file_size:
-                    if (file_size - f.tell()) <= chunk_size:
-                        dbx.files_upload_session_finish(f.read(chunk_size), cursor, commit)
-                        break
-                    else:
-                        dbx.files_upload_session_append_v2(f.read(chunk_size), cursor)
-                        cursor.offset = f.tell()
-
-
+        client.stop_record()
         return jsonify({"success": True})
     else:
         client.start_record()
@@ -114,4 +116,4 @@ def change_scene():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, host='0.0.0.0')
+    socketio.run(app, debug=True, use_reloader=False, host='0.0.0.0')
