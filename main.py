@@ -40,7 +40,7 @@ def on_current_program_scene_changed(data):
 
 def upload_to_dropbox(data):
     video_path = data.output_path
-    dropbox_path = f"/Homily/{os.path.basename(video_path)}"
+    dropbox_path = f"/{os.path.basename(video_path)}"
 
     chunk_size = 50 * 1024 * 1024
     file_size = os.path.getsize(video_path)
