@@ -36,11 +36,11 @@ To get their OBS token, follow these next instructions
 
 ### 1. In OBS, Non-Safe Mode, Select Tools --> WebSocket Server Settings
 
-![WebSocket Server Settings](Assets/image-2.png)
+![WebSocket Server Settings](assets/image-2.png)
 
 ### 2. On This page, Select enable WebSocket Server, also go ahead and copy the server password, then hit apply and ok.
 
-![WebSocket Server Settings Panel](Assets/image-3.png)
+![WebSocket Server Settings Panel](assets/image-3.png)
 
 ### 3. In an .env file that you will create, paste the password you previously copied.
 
