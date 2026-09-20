@@ -1,5 +1,5 @@
 import obsws_python as obs
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory
 from flask_socketio import SocketIO
 import dropbox
 from obsws_python.error import OBSSDKError, OBSSDKRequestError
@@ -94,6 +94,11 @@ event_handler.callback.register([
 ])
 
 
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='vnd.microsoft.icon')
+
 @app.route("/")
 def main():
     return render_template("index.html")
@@ -152,4 +157,4 @@ def change_scene():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, use_reloader=False, host='0.0.0.0')
+    socketio.run(app, debug=True, use_reloader=False, host='0.0.0.0', port=80)
