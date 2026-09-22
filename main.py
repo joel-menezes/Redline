@@ -109,12 +109,18 @@ def on_connect(auth=None):
     is_active = client.get_record_status().output_active
 
     # Update the client with the current recording status and scene name upon connection
-    socketio.emit("obs_update", {
+    try:
+        socketio.emit("obs_update", {
             "message": "REC..." if is_active else "STOPPED"
         })
-    socketio.emit("scene_update", {
-                    "message": client.get_current_program_scene().scene_name
-                })
+        socketio.emit("scene_update", {
+            "message": client.get_current_program_scene().scene_name
+        })
+    except Exception as e:
+        socketio.emit("notif", {
+            "message": f"Error: Failed to update client on connection. {str(e)}",
+            "status": "error"
+        })
 
 @app.route("/record", methods=["POST"])
 def record():
