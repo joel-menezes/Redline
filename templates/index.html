@@ -140,12 +140,6 @@
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
-        const settings = document.getElementById("settings");
-
-        settings.addEventListener("click", () => {
-            alert("Settings not avalible yet!");
-        });
-
        function showToast(message, duration = 3000, status = "success") {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
@@ -179,6 +173,12 @@
             }, 300);
         }, duration);
        }
+
+       const settings = document.getElementById("settings");
+
+        settings.addEventListener("click", () => {
+            showToast("Settings button isn't available yet!", 3000, "warning");
+        });
 
         const rec = document.getElementById("rec")
         rec.addEventListener("click", async() => {
