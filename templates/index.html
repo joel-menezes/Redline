@@ -133,13 +133,19 @@
     <div id="scene"> <p> Reposition <p></div>
     <div id="toast-container"></div>
 
-    <div class="head">
+    <div class="head" id="settings">
         <span class="material-symbols-outlined">settings</span>
     </div>
 </body>
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
+        const settings = document.getElementById("settings");
+
+        settings.addEventListener("click", () => {
+            alert("Settings not avalible yet!");
+        });
+
        function showToast(message, duration = 3000, status = "success") {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
