@@ -42,7 +42,7 @@
         #scene{
             width: 125px;
             height: 50px;
-            border-radius: 20%;
+            border-radius: 9999px;
             background-color: #252424;
             display: flex;
             align-items: center;
@@ -50,7 +50,6 @@
             cursor: pointer;
             color: white;
             user-select: none;
-            border: 8px outset #334155;
             box-sizing: border-box;
         }
         
@@ -182,12 +181,9 @@
             if (data.message == "REC..."){
                 rec.style.backgroundColor = "#c50000";
                 rec.style.border =  "8px outset #e60000";
-                change_scene.style.border =  "8px outset #e60000";
             }else{
                rec.style.backgroundColor = "#252424";
                rec.style.border =  "8px inset #334155";
-               change_scene.style.border =  "8px outset #334155";
-
             }
         });
 
