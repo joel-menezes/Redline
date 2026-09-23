@@ -53,7 +53,26 @@
             user-select: none;
             box-sizing: border-box;
         }
-        
+
+        .buttons p{
+            margin: 0;
+        }
+
+        .buttons{
+            width: 125px;
+            height: 50px;
+            gap: 10px;
+            border-radius: 9999px;
+            background-color: #252424;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }        
         
         #toast-container{
             position: fixed;
@@ -65,8 +84,7 @@
             gap: 10px;
             z-index: 9999;
         }
-
-        
+       
 
         .toast{
             width: 100%;
@@ -121,6 +139,21 @@
             user-select: none;
             box-sizing: border-box;
         }
+
+        .button-container.show{
+            opacity: 1;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .button-container{
+            position: fixed;
+            top: 50px;
+            right: 1%;
+            opacity: 0;
+            transform: translateY(0px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
     </style>
 
 </head>
@@ -130,12 +163,20 @@
     </div>
     <div id="curr_scene"> <p  id="curr_scene_text">Scene Name: Opening</p> </div>
 
-    <div id="scene"> <p> Reposition <p></div>
+    <div id="scene"><p> Reposition <p></div>
     <div id="toast-container"></div>
 
     <div class="head" id="settings">
         <span class="material-symbols-outlined">settings</span>
     </div>
+
+    <div class="button-container" id="settings_container">
+        <div class="buttons" id="record"> <p> Record <p></div>
+        <div class="buttons" id="stream"> <p> Stream <p></div>
+        <div class="buttons" id="settings_button"> <p> Settings <p></div>
+    </div>
+    
+
 </body>
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
@@ -175,9 +216,10 @@
        }
 
        const settings = document.getElementById("settings");
-
+       const settings_container = document.getElementById("settings_container");
         settings.addEventListener("click", () => {
             showToast("Settings button isn't available yet!", 3000, "warning");
+            // settings_container.classList.toggle("show");    
         });
 
         const rec = document.getElementById("rec")
