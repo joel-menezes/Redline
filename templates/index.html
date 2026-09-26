@@ -154,10 +154,23 @@
             transform: translateY(0px);
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
+        #record-container{
+            opacity: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* pointer-events: none; */
+        }
+        #record-container.show{
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 
 </head>
 <body>
+    <div id="record-container">
     <div id="rec">
         <p id="status">REC...</p>
     </div>
@@ -165,7 +178,7 @@
 
     <div id="scene"><p> Reposition <p></div>
     <div id="toast-container"></div>
-
+</div>
     <div class="head" id="settings">
         <span class="material-symbols-outlined">settings</span>
     </div>
@@ -218,8 +231,16 @@
        const settings = document.getElementById("settings");
        const settings_container = document.getElementById("settings_container");
         settings.addEventListener("click", () => {
-            showToast("Settings button isn't available yet!", 3000, "warning");
-            // settings_container.classList.toggle("show");    
+            // showToast("Settings button isn't available yet!", 3000, "warning");
+            settings_container.classList.toggle("show");    
+        });
+
+
+        const record_section = document.getElementById("record");
+        const record_container = document.getElementById("record-container");
+        record_section.addEventListener("click", () => {
+           
+            record_container.classList.toggle("show");    
         });
 
         const rec = document.getElementById("rec")
