@@ -1,5 +1,6 @@
 import obsws_python as obs
-from flask import Flask, render_template, jsonify, send_from_directory
+import requests
+from flask import Flask, render_template, jsonify, send_from_directory, request
 from flask_socketio import SocketIO
 import dropbox
 from obsws_python.error import OBSSDKError, OBSSDKRequestError
@@ -7,6 +8,8 @@ from dotenv import load_dotenv
 import threading
 import subprocess
 import os
+import sys
+from onvif import ONVIFCamera
 
 load_dotenv()
 
@@ -16,6 +19,9 @@ PASSWORD = os.getenv("obs_password")
 APP_KEY = os.getenv("app_key")
 APP_SECRET = os.getenv("app_secret")
 REFRESH_TOKEN = os.getenv("refresh_token")
+# camera = ONVIFCamera(onvif_ip, onvif_port, data.get("onvif_user"), data.get("onvif_pass"))
+
+
 
 
 # Clients and Event Handlers
@@ -156,9 +162,45 @@ def record():
 
 @app.route("/change_scene", methods=["POST"])
 def change_scene():
+    data = request.get_json()
     try:
-        client.set_current_program_scene("Scene 3") # Placeholder
+        client.set_current_program_scene(data.get("scene_name")) 
         return jsonify({"success": True})
+    except Exception as e:
+        socketio.emit("notif", {
+            "message": f"Error: Failed to change scene. {str(e)}",
+            "status": "error"
+        })
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+
+@app.route("/change_preset", methods=["POST"])
+def change_preset():
+    data = request.get_json()
+    try:
+
+        onvif_ip = data.get("onvif_ip")
+        onvif_port = data.get("onvif_port", 80)
+        onvif_preset = data.get("onvif_preset")
+
+
+        url = f"http://{onvif_ip}:{onvif_port}/onvif/ptz_service"
+        body = f'<?xml version="1.0"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl"><s:Body><tptz:GotoPreset><tptz:ProfileToken/><tptz:PresetToken>{onvif_preset}</tptz:PresetToken></tptz:GotoPreset></s:Body></s:Envelope>'
+
+        response = requests.post(
+            url,
+            data=body,
+            headers={"Content-Type": "applications/soap+xml;charset=utf-8"},
+            timeout = 2
+        )
+
+        socketio.emit("notif", {
+                    "message": f"Success: Camera repositioning, Status: {response.status_code}",
+                    "status": "success"
+                })
+        return jsonify({"success": response.status_code == 200})
+    
     except Exception as e:
         socketio.emit("notif", {
             "message": f"Error: Failed to change scene. {str(e)}",

@@ -53,6 +53,20 @@
             user-select: none;
             box-sizing: border-box;
         }
+        
+        .preset{
+            width: 125px;
+            height: 50px;
+            border-radius: 9999px;
+            background-color: #252424;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            box-sizing: border-box;
+        }
 
         .buttons p{
             margin: 0;
@@ -166,6 +180,15 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        #scene_changers{
+            display:  flex;
+            flex-direction:  row;
+            gap: 10px;
+            align-content: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
     </style>
 
 </head>
@@ -176,7 +199,14 @@
     </div>
     <div id="curr_scene"> <p  id="curr_scene_text">Scene Name: Opening</p> </div>
 
-    <div id="scene"><p> Reposition <p></div>
+
+    <div id="scene_changers">
+        <div id="scene"><p> Reposition <p></div>
+        <div class="preset" id="Ambo" data-preset="1"><p>Ambo<p></div>
+        <div class="preset" data-preset="2" id="sanctuary"><p> Sanctuary <p></div>
+    </div>
+
+
     <div id="toast-container"></div>
 </div>
     <div class="head" id="settings">
@@ -257,15 +287,45 @@
         const change_scene = document.getElementById("scene")
         change_scene.addEventListener("click", async() => {
             const response = await fetch("/change_scene",{
-                method: "POST"
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    scene_name: "Scene 2",
+                }),
             })
 
             const data = await response.json();
+            console.log(data);
+        })
+
+        const change_preset = document.querySelectorAll(".preset")
+        change_preset.forEach(button => {
+            button.addEventListener("click", async() => {
+            const response = await fetch("/change_preset",{
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    onvif_ip: "127.0.0.1",
+                    onvif_port: 80,
+                    onvif_user: "admin",
+                    onvif_pass: "admin",
+                    onvif_preset: button.getAttribute("data-preset"),
+                }),
+            })
+
+            const data = await response.json();
+            console.log(data);
 
             if (data.success){
                 console.log("Success");
             }
         })
+        });
+        
 
         const socket = io();
         
