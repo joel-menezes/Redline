@@ -195,19 +195,24 @@ def change_preset():
             timeout = 2
         )
 
-        socketio.emit("notif", {
-                    "message": f"Success: Camera repositioning, Status: {response.status_code}",
-                    "status": "success"
-                })
 
         if response.status_code == 200:
             client.set_current_program_scene(data.get("scene_name")) 
-            
+            socketio.emit("notif", {
+                                "message": f"Success: Camera repositioning, Status: {response.status_code}",
+                                "status": "success"
+                            })
+        else:
+            socketio.emit("notif", {
+                                "message": f"Error: Camera Failed Repositioning, Status: {response.status_code}",
+                                "status": "error"
+                            })
+
         return jsonify({"success": response.status_code == 200})
     
     except Exception as e:
         socketio.emit("notif", {
-            "message": f"Error: Failed to change scene. {str(e)}",
+            "message": f"Error: Failed to change preset. {str(e)}",
             "status": "error"
         })
         return jsonify({"success": False, "error": str(e)}), 500
