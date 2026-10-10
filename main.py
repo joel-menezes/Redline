@@ -199,6 +199,10 @@ def change_preset():
                     "message": f"Success: Camera repositioning, Status: {response.status_code}",
                     "status": "success"
                 })
+
+        if response.status_code == 200:
+            client.set_current_program_scene(data.get("scene_name")) 
+            
         return jsonify({"success": response.status_code == 200})
     
     except Exception as e:

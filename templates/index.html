@@ -202,8 +202,8 @@
 
     <div id="scene_changers">
         <div id="scene"><p> Reposition <p></div>
-        <div class="preset" id="Ambo" data-preset="1"><p>Ambo<p></div>
-        <div class="preset" data-preset="2" id="sanctuary"><p> Sanctuary <p></div>
+        <div class="preset" id="Ambo" data-preset="1" data-scene="Ambo"><p>Ambo<p></div>
+        <div class="preset" data-preset="2" id="sanctuary" data-scene="Sanctuary"><p> Sanctuary <p></div>
     </div>
 
 
@@ -314,6 +314,7 @@
                     onvif_user: "admin",
                     onvif_pass: "admin",
                     onvif_preset: button.getAttribute("data-preset"),
+                    scene_name: button.getAttribute("data-scene"),
                 }),
             })
 
