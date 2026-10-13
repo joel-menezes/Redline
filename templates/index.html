@@ -40,7 +40,40 @@
             filter: brightness(0.85);
         }
 
+        #stream_button{
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background-color: #7A1CAC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            border: 8px inset #E0A9FF;
+            box-sizing: border-box;
+        }
+        
+        #stream_button:hover{
+            filter: brightness(0.85);
+        }
+
         #scene{
+            width: 125px;
+            height: 50px;
+            border-radius: 9999px;
+            background-color: #252424;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        .scene{
             width: 125px;
             height: 50px;
             border-radius: 9999px;
@@ -81,6 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            text-align: center;
             cursor: pointer;
             color: white;
             user-select: none;
@@ -174,14 +208,26 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            /* pointer-events: none; */
         }
         #record-container.show{
             opacity: 1;
             pointer-events: auto;
         }
 
-        #scene_changers{
+        #stream-container{
+            opacity: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #stream-container.show{
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+    
+        .scene_changers{
             display:  flex;
             flex-direction:  row;
             flex-wrap: wrap;
@@ -190,23 +236,70 @@
             justify-content: center;
             margin-top: 10px;
         }
+
+        .hidden{
+            display: none !important;
+        }
+
+        dialog{
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            width: 50%;
+            
+        }
+    #aligns{
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        }
+
+        #close_settings_button{
+             width: 125px;
+            height: 50px;
+            gap: 10px;
+            border-radius: 9999px;
+            background-color: #252424;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            box-sizing: border-box;
+            margin-top: 10px;
+            border: none;
+        }
     </style>
 
 </head>
 <body>
     <div id="record-container">
-    <div id="rec">
-        <p id="status">REC...</p>
+        <div id="rec">
+            <p id="status">REC...</p>
+        </div>
+        <div id="curr_scene"> <p  id="curr_scene_text">Scene Name: Opening</p> </div>
+
+
+        <div id="scene_changers_record" class="scene_changers">
+            
     </div>
-    <div id="curr_scene"> <p  id="curr_scene_text">Scene Name: Opening</p> </div>
-
-
-    <div id="scene_changers">
-        <div id="scene"><p> Reposition <p></div>
-        <div class="preset" id="Ambo" data-preset="1" data-scene="Ambo"><p>Ambo<p></div>
-        <div class="preset" data-preset="2" id="sanctuary" data-scene="Sanctuary"><p> Sanctuary <p></div>
     </div>
 
+    <div id="stream-container" class="hidden">
+        <div id="stream_button">
+            <p id="status">STREAMING...</p>
+        </div>
+        <div id="curr_scene"> <p  id="curr_scene_text">Preview Scene Name: Opening</p> </div>
+        <!-- <div id="curr_scene"> <p  id="curr_scene_text">Program Scene Name: Opening</p> </div> -->
+
+
+        <div id="scene_changers_stream" class="scene_changers">
+    </div>
+</div>
 
     <div id="toast-container"></div>
 </div>
@@ -215,16 +308,130 @@
     </div>
 
     <div class="button-container" id="settings_container">
-        <div class="buttons" id="record"> <p> Record <p></div>
-        <div class="buttons" id="stream"> <p> Stream <p></div>
-        <div class="buttons" id="settings_button"> <p> Settings <p></div>
+        <div class="buttons" id="record"> <p> Record </p></div>
+        <div class="buttons" id="stream"> <p> Stream</p></div>
+        <div class="buttons" id="settings_button"> <p> Settings</p></div>
     </div>
     
+
+
+    <dialog id="settings_box">
+        <h2>Settings</h2>
+        <div id="aligns">
+            <div class="buttons" id="record"> <p>Add Scene</p></div>
+            <div class="buttons" id="stream"> <p> Add Preset </p></div>
+        </div>
+        <button id="close_settings_button">Close</button>
+    </dialog>
 
 </body>
 
 <script src = "https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script>
+
+        const settings_open = document.querySelector("#settings_button")
+        const settings_close = document.querySelector("#close_settings_button")
+        const settings_box = document.querySelector("#settings_box")
+
+        settings_open.addEventListener("click", () => {
+            settings_box.showModal()
+        })
+
+        settings_close.addEventListener("click", () => {
+            settings_box.close()
+        })
+
+        settings_box.addEventListener("click", (event) => {
+            if (event.target == modal){
+            settings_box.close()
+        }})
+
+        const stream_presets = [
+            {name: "Ambo", data_preset: "1", data_scene: "Ambo"},
+            {name: "Sanctuary", data_preset: "2", data_scene: "Sanctuary"}]
+        
+
+        const stream_scene_presets = document.getElementById("scene_changers_stream");
+        stream_presets.forEach(element => {
+
+            var button = document.createElement("div");
+            button.classList.add("preset"); // Camera Position Button
+            button.textContent = element.name; // Button Name
+            button.id = element.name;
+            button.setAttribute("data-preset", element.data_preset) // Camera Position
+            button.setAttribute("data-scene", element.data_scene) // OBS Scene Correlation
+            stream_scene_presets.appendChild(button); 
+
+        })
+
+        const stream_scenes = [
+            {name: "Reposition", data_scene: "Ambo"},
+        ]
+
+        stream_scenes.forEach(element => {
+
+            var button = document.createElement("div");
+            button.classList.add("scene");
+            button.textContent = element.name;
+            button.id = element.name
+            button.setAttribute("data-scene", element.data_scene)
+            stream_scene_presets.appendChild(button); 
+
+        })
+
+        const record_presets = [
+            {name: "Ambo", data_preset: "1", data_scene: "Ambo"},
+            {name: "Sanctuary", data_preset: "2", data_scene: "Sanctuary"}]
+        
+
+        const record_scene_presets = document.getElementById("scene_changers_record");
+        record_presets.forEach(element => {
+
+            var button = document.createElement("div");
+            button.classList.add("preset"); // Camera Position Button
+            button.textContent = element.name; // Button Name
+            button.id = element.name;
+            button.setAttribute("data-preset", element.data_preset) // Camera Position
+            button.setAttribute("data-scene", element.data_scene) // OBS Scene Correlation
+            record_scene_presets.appendChild(button); 
+
+        })
+
+        const record_scenes = [
+            {name: "Reposition", data_scene: "Ambo"},
+        ]
+
+        record_scenes.forEach(element => {
+
+            var button = document.createElement("div");
+            button.classList.add("scene");
+            button.textContent = element.name;
+            button.id = element.name
+            button.setAttribute("data-scene", element.data_scene)
+            record_scene_presets.appendChild(button); 
+
+        })
+       
+
+
+
+        const record_button = document.getElementById("record")
+        const stream_button = document.getElementById("stream")
+        const record_container = document.getElementById("record-container")
+        const stream_container = document.getElementById("stream-container")
+
+        record_button.addEventListener("click", () => {
+            record_container.classList.remove("hidden");
+            stream_container.classList.add("hidden");
+        })
+
+
+        stream_button.addEventListener("click", () => {
+            record_container.classList.add("hidden");
+            stream_container.classList.remove("hidden");
+        })
+
+
        function showToast(message, duration = 3000, status = "success") {
         const container = document.getElementById("toast-container");
         const toast = document.createElement("div");
@@ -262,18 +469,11 @@
        const settings = document.getElementById("settings");
        const settings_container = document.getElementById("settings_container");
         settings.addEventListener("click", () => {
-            // showToast("Settings button isn't available yet!", 3000, "warning");
             settings_container.classList.toggle("show");    
         });
 
 
-        const record_section = document.getElementById("record");
-        const record_container = document.getElementById("record-container");
-        record_section.addEventListener("click", () => {
-           
-            record_container.classList.toggle("show");    
-        });
-
+       
         const rec = document.getElementById("rec")
         rec.addEventListener("click", async() => {
             const response = await fetch("/record",{
@@ -285,21 +485,28 @@
             }
         })
         
-        const change_scene = document.getElementById("scene")
-        change_scene.addEventListener("click", async() => {
+        const change_scene = document.querySelectorAll(".scene")
+        change_scene.forEach(button => {
+            button.addEventListener("click", async() => {
             const response = await fetch("/change_scene",{
                 method: "POST",
                 headers:{
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    scene_name: "Scene 2",
+                    scene_name: button.getAttribute("data-scene"),
                 }),
             })
 
             const data = await response.json();
             console.log(data);
+
+            if (data.success){
+                console.log("Success");
+            }
         })
+        });
+        
 
         const change_preset = document.querySelectorAll(".preset")
         change_preset.forEach(button => {
@@ -338,7 +545,7 @@
                 rec.style.border =  "8px outset #e60000";
             }else{
                rec.style.backgroundColor = "#252424";
-               rec.style.border =  "8px inset #334155";
+               rec.style.border =  "8px inset #e60000"; // 334155
             }
         });
 
