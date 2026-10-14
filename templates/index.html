@@ -273,6 +273,32 @@
             margin-top: 10px;
             border: none;
         }
+        
+        .table-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-row {
+            font-weight: bold;
+        }
+
+        .table-row input,
+        .table-row select{
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 8px;
+        }
+
     </style>
 
 </head>
@@ -318,9 +344,26 @@
     <dialog id="settings_box">
         <h2>Settings</h2>
         <div id="aligns">
-            <div class="buttons" id="record"> <p>Add Scene</p></div>
-            <div class="buttons" id="stream"> <p> Add Preset </p></div>
+            <div class="buttons" id="record"><p>Add Scene</p></div>
+            <div class="buttons" id="stream"><p>Add Preset</p></div>
         </div>
+
+        <br><br><br>
+        <div class="table-container">
+            <div class="table-row header-row">
+                <span>Name</span>
+                <span>Type</span>
+                <span>Preset</span>
+                <span>Scene</span>
+                <span>Camera</span>
+                <span>User</span>
+                <span>Pass</span>
+            </div>
+
+
+        </div>
+
+    
         <button id="close_settings_button">Close</button>
     </dialog>
 
@@ -336,22 +379,115 @@
         settings_open.addEventListener("click", () => {
             settings_box.showModal()
         })
-
-        settings_close.addEventListener("click", () => {
-            settings_box.close()
-        })
-
-        settings_box.addEventListener("click", (event) => {
-            if (event.target == modal){
-            settings_box.close()
-        }})
-
+        
+        var change_preset = document.querySelectorAll(".preset")
+        const stream_scene_presets = document.getElementById("scene_changers_stream");
         const stream_presets = [
             {name: "Ambo", data_preset: "1", data_scene: "Ambo"},
             {name: "Sanctuary", data_preset: "2", data_scene: "Sanctuary"}]
+
+        var record_presets = [
+            {name: "Ambo", data_preset: "1", data_scene: "Ambo"},
+            {name: "Sanctuary", data_preset: "2", data_scene: "Sanctuary"}]
+
+
+
+        const container = document.querySelector(".table-container")
+
+        stream_presets.forEach(element => {
+            var row = document.createElement('div')
+            row.className = "table-row"
+
+            row.innerHTML = `
+                <input type="text" class="name" value="${element.name}"/>
+                <p class="type">Preset</p>
+                <input type="text" class="preset_input" value="${element.data_preset}"/>
+                <input type="text" class="scene_input" value="${element.data_scene}"/>
+                <input type="text" class="camera"/>
+                <input type="text" class="user"/>
+                <input type="text" class="pass"/>
+            `
+            container.appendChild(row);
+        })
+
+        settings_close.addEventListener("click", () => {
+            
+            const rows = document.querySelectorAll(".table-container .table-row");
+            var updates = [];
+            rows.forEach(row => {
+                if (row.classList.contains("header-row")) return;
+
+                const name = row.querySelector('.name').value;
+                console.log(name);
+                const type = row.querySelector('.type').textContent;
+                const preset = row.querySelector('.preset_input').value;
+                const scene = row.querySelector('.scene_input').value;
+                const camera = row.querySelector('.camera').value;
+                const user = row.querySelector('.user').value;
+                const pass = row.querySelector('.pass').value;
+
+                updates.push({
+                    name: name,
+                    type: type,
+                    data_preset: preset,
+                    data_scene: scene,
+                    ip: camera,
+                    user: user,
+                    pass: pass,
+                })
+            })
+            console.log(updates);
+            
+            stream_scene_presets.innerHTML = "";
+            updates.forEach(element => {
+
+                var button = document.createElement("div");
+                button.classList.add("preset"); // Camera Position Button
+                button.textContent = element.name; // Button Name
+                button.id = element.name;
+                button.setAttribute("data-preset", element.data_preset) // Camera Position
+                button.setAttribute("data-scene", element.data_scene) // OBS Scene Correlation
+                stream_scene_presets.appendChild(button); 
+                
+            });
+            change_preset = document.querySelectorAll(".preset")
+            change_preset.forEach(button => {
+            button.addEventListener("click", async() => {
+            const response = await fetch("/change_preset",{
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    onvif_ip: "127.0.0.1",
+                    onvif_port: 80,
+                    onvif_user: "admin",
+                    onvif_pass: "admin",
+                    onvif_preset: button.getAttribute("data-preset"),
+                    scene_name: button.getAttribute("data-scene"),
+                }),
+            })
+
+            const data = await response.json();
+            console.log(data);
+
+            if (data.success){
+                console.log("Success");
+            }
+        })
+        });
+    settings_box.close()
+
+        })
+
+        // settings_box.addEventListener("click", (event) => {
+        //     if (event.target == modal){
+        //     settings_box.close()
+        // }})
+        
+        
         
 
-        const stream_scene_presets = document.getElementById("scene_changers_stream");
         stream_presets.forEach(element => {
 
             var button = document.createElement("div");
@@ -379,9 +515,7 @@
 
         })
 
-        const record_presets = [
-            {name: "Ambo", data_preset: "1", data_scene: "Ambo"},
-            {name: "Sanctuary", data_preset: "2", data_scene: "Sanctuary"}]
+
         
 
         const record_scene_presets = document.getElementById("scene_changers_record");
@@ -507,8 +641,7 @@
         })
         });
         
-
-        const change_preset = document.querySelectorAll(".preset")
+        
         change_preset.forEach(button => {
             button.addEventListener("click", async() => {
             const response = await fetch("/change_preset",{

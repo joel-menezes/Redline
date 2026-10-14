@@ -45,7 +45,18 @@ def on_current_program_scene_changed(data):
                     "message": scene
                 })
     socketio.emit("notif", {
-                    "message": f"Success: Scene changed to {scene}",
+                    "message": f"Success: Program Scene changed to {scene}",
+                    "status": "success"
+                })
+
+
+def on_current_preview_scene_changed(data):
+    scene = data.scene_name
+    socketio.emit("scene_update", {
+                    "message": scene
+                })
+    socketio.emit("notif", {
+                    "message": f"Success: Preview Scene changed to {scene}",
                     "status": "success"
                 })
 
@@ -102,6 +113,7 @@ def on_record_state_changed(data):
 event_handler.callback.register([
     on_current_program_scene_changed,
     on_record_state_changed,
+    on_current_preview_scene_changed,
 ])
 
 
@@ -180,35 +192,44 @@ def change_preset():
     data = request.get_json()
     try:
 
-        onvif_ip = data.get("onvif_ip")
-        onvif_port = data.get("onvif_port", 80)
         onvif_preset = data.get("onvif_preset")
+        if onvif_preset != "":
+            onvif_ip = data.get("onvif_ip")
+            onvif_port = data.get("onvif_port", 80)
 
 
-        url = f"http://{onvif_ip}:{onvif_port}/onvif/ptz_service"
-        body = f'<?xml version="1.0"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl"><s:Body><tptz:GotoPreset><tptz:ProfileToken/><tptz:PresetToken>{onvif_preset}</tptz:PresetToken></tptz:GotoPreset></s:Body></s:Envelope>'
+            url = f"http://{onvif_ip}:{onvif_port}/onvif/ptz_service"
+            body = f'<?xml version="1.0"?><s:Envelope xmlns:s="http://www.w3.org/2003/05/soap-envelope" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl"><s:Body><tptz:GotoPreset><tptz:ProfileToken/><tptz:PresetToken>{onvif_preset}</tptz:PresetToken></tptz:GotoPreset></s:Body></s:Envelope>'
 
-        response = requests.post(
-            url,
-            data=body,
-            headers={"Content-Type": "applications/soap+xml;charset=utf-8"},
-            timeout = 2
-        )
+            response = requests.post(
+                url,
+                data=body,
+                headers={"Content-Type": "applications/soap+xml;charset=utf-8"},
+                timeout = 2
+            )
 
 
-        if response.status_code == 200:
-            client.set_current_program_scene(data.get("scene_name")) 
-            socketio.emit("notif", {
-                                "message": f"Success: Camera repositioning, Status: {response.status_code}",
-                                "status": "success"
-                            })
+            if response.status_code == 200:
+                client.set_current_preview_scene(data.get("scene_name")) 
+                socketio.emit("notif", {
+                                    "message": f"Success: Camera repositioning, Status: {response.status_code}",
+                                    "status": "success"
+                                })
+            else:
+                socketio.emit("notif", {
+                                    "message": f"Error: Camera Failed Repositioning, Status: {response.status_code}",
+                                    "status": "error"
+                                })
+
+            return jsonify({"success": response.status_code == 200})
         else:
-            socketio.emit("notif", {
-                                "message": f"Error: Camera Failed Repositioning, Status: {response.status_code}",
-                                "status": "error"
-                            })
+            client.set_current_preview_scene(data.get("scene_name")) 
+        #     socketio.emit("notif", {
+        #     "message": f"Success: ",
+        #     "status": "success"
+        # })
+            return jsonify({"success": True})
 
-        return jsonify({"success": response.status_code == 200})
     
     except Exception as e:
         socketio.emit("notif", {
